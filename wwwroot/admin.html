@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/admin-styles.css">
+</head>
+<body class="admin-body">
+  <!-- Login Screen -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <h1>Admin Login</h1>
+      <form id="loginForm">
+        <input id="username" type="text" placeholder="Username" required />
+        <input id="password" type="password" placeholder="Password" required />
+        <button type="submit">Login</button>
+      </form>
+      <p class="login-hint">Demo: username = admin, password = admin123</p>
+    </div>
+  </div>
+
+  <!-- Admin Dashboard -->
+  <div id="adminDashboard" class="admin-dashboard hidden">
+    <!-- Header -->
+    <header class="admin-header">
+      <h1>Admin Dashboard</h1>
+      <div class="admin-user">
+        <span id="adminName">Administrator</span>
+        <button id="logoutBtn" class="logout-btn">Logout</button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="admin-main">
+      <!-- Sidebar -->
+      <nav class="admin-sidebar">
+        <div class="nav-item active" data-section="dashboard">Dashboard</div>
+        <div class="nav-item" data-section="members">Members</div>
+        <div class="nav-item" data-section="groups">Groups</div>
+        <div class="nav-item" data-section="notifications">Send Notifications</div>
+        <div class="nav-item" data-section="templates">Templates</div>
+        <div class="nav-item" data-section="history">History</div>
+      </nav>
+
+      <!-- Content Area -->
+      <main class="admin-content">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="content-section active">
+          <h2>Dashboard Overview</h2>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <h3>Total Members</h3>
+              <div class="stat-number" id="totalMembers">0</div>
+            </div>
+            <div class="stat-card">
+              <h3>Online Members</h3>
+              <div class="stat-number" id="onlineMembers">0</div>
+            </div>
+            <div class="stat-card">
+              <h3>Today's Notifications</h3>
+              <div class="stat-number" id="todayNotifications">0</div>
+            </div>
+            <div class="stat-card">
+              <h3>Total Groups</h3>
+              <div class="stat-number" id="totalGroups">0</div>
+            </div>
+          </div>
+          
+          <div class="online-members">
+            <h3>Currently Online Members</h3>
+            <div id="onlineMembersList" class="member-list"></div>
+          </div>
+        </section>
+
+        <!-- Members Section -->
+        <section id="members" class="content-section">
+          <h2>Member Management</h2>
+          <div class="section-toolbar">
+            <input id="memberSearch" type="text" placeholder="Search members..." />
+            <button id="refreshMembers">Refresh</button>
+          </div>
+          <div id="membersTable" class="data-table"></div>
+        </section>
+
+        <!-- Groups Section -->
+        <section id="groups" class="content-section">
+          <h2>Group Management</h2>
+          <div class="section-toolbar">
+            <button id="createGroupBtn" class="primary-btn">Create New Group</button>
+          </div>
+          <div id="groupsContainer" class="groups-grid"></div>
+        </section>
+
+        <!-- Notifications Section -->
+        <section id="notifications" class="content-section">
+          <h2>Send Notifications</h2>
+          
+          <!-- Quick Send -->
+          <div class="notification-form">
+            <h3>Quick Send</h3>
+            <div class="form-row">
+              <select id="recipientType">
+                <option value="member">Specific Member</option>
+                <option value="group">Group</option>
+                <option value="broadcast">All Members</option>
+              </select>
+            </div>
+            
+            <div id="memberSelector" class="form-row">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <label style="font-size: 15px; font-weight: 600; color: #374151;">Select Recipients</label>
+                <button type="button" onclick="refreshMembersList()" class="refresh-members-btn">
+                  <span class="refresh-icon">🔄</span>
+                  <span class="refresh-text">Refresh</span>
+                </button>
+              </div>
+              <div class="multi-select-container">
+                <div class="multi-select-header" id="memberSelectHeader">
+                  <span class="placeholder">Select Members...</span>
+                  <span class="arrow">▼</span>
+                </div>
+                <div class="multi-select-dropdown hidden" id="memberDropdown">
+                  <div class="multi-select-search">
+                    <input type="text" placeholder="Search members..." id="memberSearch">
+                  </div>
+                  <div class="multi-select-options" id="memberOptions">
+                    <!-- Options will be populated by JavaScript -->
+                  </div>
+                </div>
+              </div>
+              <div class="selected-members" id="selectedMembers"></div>
+            </div>
+            
+            <div id="groupSelector" class="form-row hidden">
+              <select id="targetGroup">
+                <option value="">Select Group...</option>
+              </select>
+            </div>
+            
+            <div class="form-row">
+              <input id="notificationTitle" type="text" placeholder="Notification Title" />
+            </div>
+            <div class="form-row">
+              <textarea id="notificationMessage" placeholder="Notification Message"></textarea>
+            </div>
+            <div class="form-row">
+              <button id="sendNotification" class="primary-btn">Send Notification</button>
+            </div>
+          </div>
+
+          <!-- Template Send -->
+          <div class="notification-form">
+            <h3>Send Template</h3>
+            <div class="form-row">
+              <select id="templateSelect">
+                <option value="">Select Template...</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <select id="templateRecipientType">
+                <option value="member">Specific Member</option>
+                <option value="group">Group</option>
+              </select>
+            </div>
+            <div id="templateMemberSelector" class="form-row">
+              <select id="templateTargetMember">
+                <option value="">Select Member...</option>
+              </select>
+            </div>
+            <div id="templateGroupSelector" class="form-row hidden">
+              <select id="templateTargetGroup">
+                <option value="">Select Group...</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <button id="sendTemplate" class="primary-btn">Send Template</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Templates Section -->
+        <section id="templates" class="content-section">
+          <h2>Notification Templates</h2>
+          <div class="section-toolbar">
+            <button id="createTemplateBtn" class="primary-btn">Create New Template</button>
+          </div>
+          <div id="templatesContainer" class="templates-grid"></div>
+        </section>
+
+        <!-- History Section -->
+        <section id="history" class="content-section">
+          <h2>Notification History</h2>
+          <div class="section-toolbar">
+            <select id="historyDays">
+              <option value="1">Last 24 hours</option>
+              <option value="7" selected>Last 7 days</option>
+              <option value="30">Last 30 days</option>
+            </select>
+            <button id="refreshHistory">Refresh</button>
+          </div>
+          <div id="historyTable" class="data-table"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  <div id="createGroupModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Create New Group</h3>
+      <form id="createGroupForm">
+        <input id="groupName" type="text" placeholder="Group Name" required />
+        <textarea id="groupDescription" placeholder="Group Description"></textarea>
+        <input id="groupColor" type="color" value="#4f46e5" />
+        <div class="modal-actions">
+          <button type="button" class="cancel-btn" onclick="closeModal('createGroupModal')">Cancel</button>
+          <button type="submit" class="primary-btn">Create Group</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="createTemplateModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Create New Template</h3>
+      <form id="createTemplateForm">
+        <input id="templateName" type="text" placeholder="Template Name" required />
+        <input id="templateCategory" type="text" placeholder="Category" value="General" />
+        <input id="templateTitle" type="text" placeholder="Notification Title" required />
+        <textarea id="templateMessage" placeholder="Notification Message" required></textarea>
+        <textarea id="templateMetadata" placeholder="Metadata JSON (optional)"></textarea>
+        <div class="modal-actions">
+          <button type="button" class="cancel-btn" onclick="closeModal('createTemplateModal')">Cancel</button>
+          <button type="submit" class="primary-btn">Create Template</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.11/signalr.min.js"></script>
+  <script src="/admin.js"></script>
+</body>
+</html>

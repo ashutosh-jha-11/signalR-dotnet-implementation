@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quick Test - Connect Members</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Quick Test - Connect Test Members</h1>
+    <p>This page will connect test members so you can see them in the admin interface.</p>
+    
+    <button onclick="connectTestMembers()">Connect 3 Test Members</button>
+    <button onclick="checkMembers()">Check Connected Members</button>
+    
+    <div id="status"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.11/signalr.min.js"></script>
+    <script>
+        const connections = {};
+        
+        function log(message, type = 'success') {
+            const statusDiv = document.getElementById('status');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            statusDiv.appendChild(div);
+            console.log(message);
+        }
+        
+        async function connectMember(playerId) {
+            try {
+                const connection = new signalR.HubConnectionBuilder()
+                    .withUrl(`/hubs/notifications?user=${encodeURIComponent(playerId)}`)
+                    .withAutomaticReconnect()
+                    .build();
+                
+                connection.on('ReceiveNotification', (notification) => {
+                    log(`${playerId} received: ${notification.title}`, 'success');
+                });
+                
+                await connection.start();
+                connections[playerId] = connection;
+                log(`✅ ${playerId} connected successfully`, 'success');
+                return true;
+            } catch (error) {
+                log(`❌ Failed to connect ${playerId}: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        async function connectTestMembers() {
+            log('🔄 Connecting test members...', 'success');
+            
+            const testMembers = ['player123', 'player456', 'player789'];
+            
+            for (const playerId of testMembers) {
+                await connectMember(playerId);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            log('✅ All test members connected! Now check the admin interface.', 'success');
+        }
+        
+        async function checkMembers() {
+            try {
+                const response = await fetch('/api/admin/members', {
+                    headers: { 'X-ADMIN-KEY': 'secret-admin-key' }
+                });
+                
+                if (response.ok) {
+                    const members = await response.json();
+                    log(`📊 Server reports ${members.length} total members:`, 'success');
+                    
+                    members.forEach(member => {
+                        const status = member.isOnline ? '🟢 Online' : '🔴 Offline';
+                        log(`  - ${member.displayName} (${member.playerId}) ${status}`, 'success');
+                    });
+                } else {
+                    log(`❌ Failed to check members: HTTP ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error checking members: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

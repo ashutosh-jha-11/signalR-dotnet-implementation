@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Automated Testing Suite</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .test-container { background: white; padding: 20px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .test-header { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #333; }
+        .test-step { margin: 10px 0; padding: 10px; background: #f8f9fa; border-left: 4px solid #007bff; }
+        .test-result { margin: 5px 0; padding: 8px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        .log { background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 4px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; }
+        .member-status { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin: 2px; }
+        .online { background: #d4edda; color: #155724; }
+        .offline { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>🧪 SignalR Notification System - Automated Testing Suite</h1>
+    
+    <div class="test-container">
+        <div class="test-header">📋 Test Plan</div>
+        <div class="test-step">1. Connect multiple test members</div>
+        <div class="test-step">2. Verify admin can see connected members</div>
+        <div class="test-step">3. Test targeted notifications</div>
+        <div class="test-step">4. Test multi-select functionality</div>
+        <div class="test-step">5. Verify notification delivery accuracy</div>
+    </div>
+
+    <div class="test-container">
+        <div class="test-header">👥 Member Connections</div>
+        <button onclick="connectAllTestMembers()">Connect All Test Members</button>
+        <button onclick="disconnectAllMembers()">Disconnect All</button>
+        <button onclick="checkMemberStatus()">Check Status</button>
+        
+        <div id="memberStatus" class="log"></div>
+    </div>
+
+    <div class="test-container">
+        <div class="test-header">🔧 Admin API Tests</div>
+        <button onclick="testAdminAPIs()">Test All Admin APIs</button>
+        <button onclick="testMemberLoading()">Test Member Loading</button>
+        <button onclick="testGroupLoading()">Test Group Loading</button>
+        
+        <div id="apiResults" class="log"></div>
+    </div>
+
+    <div class="test-container">
+        <div class="test-header">📨 Notification Tests</div>
+        <button onclick="testTargetedNotifications()">Test Targeted Notifications</button>
+        <button onclick="testMultipleTargets()">Test Multiple Targets</button>
+        <button onclick="testBroadcast()">Test Broadcast</button>
+        
+        <div id="notificationResults" class="log"></div>
+    </div>
+
+    <div class="test-container">
+        <div class="test-header">📊 Test Results Summary</div>
+        <div id="testSummary" class="log">Click "Run All Tests" to start comprehensive testing...</div>
+        <button onclick="runAllTests()" style="background: #28a745;">🚀 Run All Tests</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.11/signalr.min.js"></script>
+    <script>
+        const testMembers = [
+            { id: 'player123', name: 'Alice' },
+            { id: 'player456', name: 'Bob' },
+            { id: 'player789', name: 'Charlie' },
+            { id: 'admin_test', name: 'Admin Test User' }
+        ];
+        
+        const connections = {};
+        const receivedNotifications = {};
+        
+        function log(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `test-result ${type}`;
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            container.appendChild(logEntry);
+            container.scrollTop = container.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+        
+        async function connectMember(memberId, memberName) {
+            try {
+                if (connections[memberId]) {
+                    await connections[memberId].stop();
+                }
+                
+                const connection = new signalR.HubConnectionBuilder()
+                    .withUrl(`/hubs/notifications?user=${encodeURIComponent(memberId)}`)
+                    .withAutomaticReconnect()
+                    .build();
+                
+                connection.on('ReceiveNotification', (notification) => {
+                    if (!receivedNotifications[memberId]) {
+                        receivedNotifications[memberId] = [];
+                    }
+                    receivedNotifications[memberId].push({
+                        ...notification,
+                        receivedAt: new Date()
+                    });
+                    log('memberStatus', `${memberName} (${memberId}) received: "${notification.title}"`, 'success');
+                });
+                
+                await connection.start();
+                connections[memberId] = connection;
+                
+                log('memberStatus', `✅ ${memberName} (${memberId}) connected successfully`, 'success');
+                return true;
+            } catch (error) {
+                log('memberStatus', `❌ Failed to connect ${memberName} (${memberId}): ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        async function connectAllTestMembers() {
+            log('memberStatus', '🔄 Connecting all test members...', 'info');
+            
+            for (const member of testMembers) {
+                await connectMember(member.id, member.name);
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second between connections
+            }
+            
+            // Wait a bit for the server to register all connections
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            await checkMemberStatus();
+        }
+        
+        async function disconnectAllMembers() {
+            for (const [memberId, connection] of Object.entries(connections)) {
+                try {
+                    await connection.stop();
+                    delete connections[memberId];
+                } catch (error) {
+                    console.error(`Failed to disconnect ${memberId}:`, error);
+                }
+            }
+            log('memberStatus', '🔌 All members disconnected', 'warning');
+        }
+        
+        async function checkMemberStatus() {
+            try {
+                const response = await fetch('/api/admin/members', {
+                    headers: {
+                        'X-ADMIN-KEY': 'secret-admin-key'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const members = await response.json();
+                
+                log('memberStatus', `📊 Server reports ${members.length} total members:`, 'info');
+                
+                members.forEach(member => {
+                    const status = member.isOnline ? 'online' : 'offline';
+                    const statusClass = member.isOnline ? 'online' : 'offline';
+                    log('memberStatus', 
+                        `<span class="member-status ${statusClass}">${member.displayName} (${member.playerId}) - ${status}</span>`, 
+                        member.isOnline ? 'success' : 'warning'
+                    );
+                });
+                
+                return members;
+            } catch (error) {
+                log('memberStatus', `❌ Failed to check member status: ${error.message}`, 'error');
+                return [];
+            }
+        }
+        
+        async function testAdminAPIs() {
+            log('apiResults', '🔄 Testing all admin APIs...', 'info');
+            
+            const tests = [
+                { name: 'Members API', url: '/api/admin/members' },
+                { name: 'Groups API', url: '/api/admin/groups' },
+                { name: 'Templates API', url: '/api/admin/templates' },
+                { name: 'Stats API', url: '/api/admin/stats' }
+            ];
+            
+            for (const test of tests) {
+                try {
+                    const response = await fetch(test.url, {
+                        headers: { 'X-ADMIN-KEY': 'secret-admin-key' }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        log('apiResults', `✅ ${test.name}: OK (${Array.isArray(data) ? data.length : 'object'} items)`, 'success');
+                    } else {
+                        log('apiResults', `❌ ${test.name}: HTTP ${response.status}`, 'error');
+                    }
+                } catch (error) {
+                    log('apiResults', `❌ ${test.name}: ${error.message}`, 'error');
+                }
+            }
+        }
+        
+        async function testMemberLoading() {
+            const members = await checkMemberStatus();
+            if (members.length > 0) {
+                log('apiResults', `✅ Member loading test: Found ${members.length} members`, 'success');
+            } else {
+                log('apiResults', `⚠️ Member loading test: No members found (connect some members first)`, 'warning');
+            }
+        }
+        
+        async function testGroupLoading() {
+            try {
+                const response = await fetch('/api/admin/groups', {
+                    headers: { 'X-ADMIN-KEY': 'secret-admin-key' }
+                });
+                
+                if (response.ok) {
+                    const groups = await response.json();
+                    log('apiResults', `✅ Group loading test: Found ${groups.length} groups`, 'success');
+                } else {
+                    log('apiResults', `❌ Group loading test: HTTP ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log('apiResults', `❌ Group loading test: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testTargetedNotifications() {
+            log('notificationResults', '🔄 Testing targeted notifications...', 'info');
+            
+            // Clear previous notifications
+            Object.keys(receivedNotifications).forEach(key => {
+                receivedNotifications[key] = [];
+            });
+            
+            // Send notification to specific member
+            const targetMember = 'player123';
+            const testTitle = `Targeted Test ${Date.now()}`;
+            
+            try {
+                const response = await fetch('/api/admin/notifications/send-to-member', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-ADMIN-KEY': 'secret-admin-key'
+                    },
+                    body: JSON.stringify({
+                        playerId: targetMember,
+                        title: testTitle,
+                        message: 'This should only go to player123'
+                    })
+                });
+                
+                if (response.ok) {
+                    log('notificationResults', `✅ Sent targeted notification to ${targetMember}`, 'success');
+                    
+                    // Wait and check delivery
+                    setTimeout(() => {
+                        const targetReceived = receivedNotifications[targetMember]?.some(n => n.title === testTitle);
+                        const othersReceived = Object.entries(receivedNotifications)
+                            .filter(([id]) => id !== targetMember)
+                            .some(([id, notifications]) => notifications.some(n => n.title === testTitle));
+                        
+                        if (targetReceived && !othersReceived) {
+                            log('notificationResults', `✅ Targeting SUCCESS: Only ${targetMember} received the notification`, 'success');
+                        } else if (targetReceived && othersReceived) {
+                            log('notificationResults', `❌ Targeting FAILED: Other members also received the notification`, 'error');
+                        } else if (!targetReceived) {
+                            log('notificationResults', `❌ Targeting FAILED: ${targetMember} did not receive the notification`, 'error');
+                        }
+                    }, 2000);
+                } else {
+                    log('notificationResults', `❌ Failed to send targeted notification: HTTP ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log('notificationResults', `❌ Targeted notification error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testMultipleTargets() {
+            log('notificationResults', '🔄 Testing multiple target notifications...', 'info');
+            
+            const targets = ['player123', 'player456'];
+            const testTitle = `Multi-Target Test ${Date.now()}`;
+            
+            try {
+                const response = await fetch('/api/notifications/send-to-players', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-ADMIN-KEY': 'secret-admin-key'
+                    },
+                    body: JSON.stringify({
+                        playerIds: targets,
+                        title: testTitle,
+                        message: 'This should go to player123 and player456 only'
+                    })
+                });
+                
+                if (response.ok) {
+                    log('notificationResults', `✅ Sent multi-target notification to ${targets.join(', ')}`, 'success');
+                    
+                    setTimeout(() => {
+                        const targetsReceived = targets.every(id => 
+                            receivedNotifications[id]?.some(n => n.title === testTitle)
+                        );
+                        const othersReceived = Object.entries(receivedNotifications)
+                            .filter(([id]) => !targets.includes(id))
+                            .some(([id, notifications]) => notifications.some(n => n.title === testTitle));
+                        
+                        if (targetsReceived && !othersReceived) {
+                            log('notificationResults', `✅ Multi-target SUCCESS: Only target members received the notification`, 'success');
+                        } else {
+                            log('notificationResults', `❌ Multi-target FAILED: Incorrect delivery`, 'error');
+                        }
+                    }, 2000);
+                } else {
+                    log('notificationResults', `❌ Failed to send multi-target notification: HTTP ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log('notificationResults', `❌ Multi-target notification error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testBroadcast() {
+            log('notificationResults', '🔄 Testing broadcast notifications...', 'info');
+            
+            const testTitle = `Broadcast Test ${Date.now()}`;
+            
+            try {
+                const response = await fetch('/api/notifications/broadcast', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-ADMIN-KEY': 'secret-admin-key'
+                    },
+                    body: JSON.stringify({
+                        title: testTitle,
+                        message: 'This should go to ALL connected members'
+                    })
+                });
+                
+                if (response.ok) {
+                    log('notificationResults', `✅ Sent broadcast notification`, 'success');
+                    
+                    setTimeout(() => {
+                        const connectedMembers = Object.keys(connections);
+                        const allReceived = connectedMembers.every(id => 
+                            receivedNotifications[id]?.some(n => n.title === testTitle)
+                        );
+                        
+                        if (allReceived && connectedMembers.length > 0) {
+                            log('notificationResults', `✅ Broadcast SUCCESS: All ${connectedMembers.length} connected members received the notification`, 'success');
+                        } else {
+                            log('notificationResults', `❌ Broadcast FAILED: Not all members received the notification`, 'error');
+                        }
+                    }, 2000);
+                } else {
+                    log('notificationResults', `❌ Failed to send broadcast: HTTP ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log('notificationResults', `❌ Broadcast error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function runAllTests() {
+            document.getElementById('testSummary').innerHTML = '';
+            log('testSummary', '🚀 Starting comprehensive test suite...', 'info');
+            
+            // Step 1: Connect members
+            log('testSummary', '📋 Step 1: Connecting test members...', 'info');
+            await connectAllTestMembers();
+            
+            // Step 2: Test APIs
+            log('testSummary', '📋 Step 2: Testing admin APIs...', 'info');
+            await testAdminAPIs();
+            
+            // Step 3: Test notifications
+            log('testSummary', '📋 Step 3: Testing notification delivery...', 'info');
+            await testTargetedNotifications();
+            
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            await testMultipleTargets();
+            
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            await testBroadcast();
+            
+            log('testSummary', '✅ Comprehensive test suite completed!', 'success');
+            log('testSummary', '👀 Check the individual test sections above for detailed results.', 'info');
+            log('testSummary', '🌐 Now you can test the admin interface at http://localhost:5000/admin.html', 'info');
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            log('testSummary', '🧪 Automated Testing Suite Ready', 'info');
+            log('testSummary', 'Click "Run All Tests" to start comprehensive testing, or use individual test buttons.', 'info');
+        });
+    </script>
+</body>
+</html>

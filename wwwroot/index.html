@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Member Portal</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/member-styles.css">
+</head>
+<body class="member-body">
+  <!-- Login Screen -->
+  <div id="loginScreen" class="member-login-screen">
+    <div class="member-login-card">
+      <h1>Member Portal</h1>
+      <p>Connect with your Player ID to receive notifications</p>
+      <form id="memberLoginForm">
+        <input id="playerId" type="text" placeholder="Enter your Player ID" value="player123" required />
+        <input id="displayName" type="text" placeholder="Display Name (optional)" />
+        <button type="submit">Connect</button>
+      </form>
+      <div class="login-links">
+        <a href="/admin.html">Admin Login</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Member Dashboard -->
+  <div id="memberDashboard" class="member-dashboard hidden">
+    <!-- Header -->
+    <header class="member-header">
+      <div class="member-info">
+        <h1>Welcome, <span id="memberDisplayName">Member</span></h1>
+        <p class="member-id">Player ID: <span id="memberPlayerId"></span></p>
+      </div>
+      <div class="member-status">
+        <div class="status-indicator online"></div>
+        <span>Connected</span>
+        <button id="disconnectBtn" class="disconnect-btn">Disconnect</button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="member-main">
+      <!-- Live Notifications Feed -->
+      <section class="notifications-feed">
+        <div class="feed-header">
+          <h2>Your Notifications</h2>
+          <div class="feed-controls">
+            <button id="clearHistory" class="clear-btn">Clear History</button>
+            <button id="markAllRead" class="mark-read-btn">Mark All Read</button>
+          </div>
+        </div>
+        
+        <div id="notificationsList" class="notifications-list">
+          <!-- Notifications will be populated here -->
+        </div>
+        
+        <div id="emptyState" class="empty-state">
+          <div class="empty-icon">📬</div>
+          <h3>No notifications yet</h3>
+          <p>You'll receive real-time notifications here when they're sent to you.</p>
+        </div>
+      </section>
+
+      <!-- Member Stats -->
+      <aside class="member-sidebar">
+        <div class="member-card">
+          <h3>Your Activity</h3>
+          <div class="activity-stats">
+            <div class="stat-item">
+              <span class="stat-label">Notifications Today</span>
+              <span class="stat-value" id="todayCount">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Total Received</span>
+              <span class="stat-value" id="totalCount">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Connection Time</span>
+              <span class="stat-value" id="connectionTime">Just now</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="member-card">
+          <h3>Your Groups</h3>
+          <div id="memberGroups" class="member-groups">
+            <!-- Groups will be populated here -->
+          </div>
+        </div>
+
+        <div class="member-card">
+          <h3>Connection Status</h3>
+          <div class="connection-info">
+            <div class="connection-detail">
+              <span>Status:</span>
+              <span class="status-text">Connected</span>
+            </div>
+            <div class="connection-detail">
+              <span>Connected Since:</span>
+              <span id="connectedSince">Just now</span>
+            </div>
+            <div class="connection-detail">
+              <span>Last Activity:</span>
+              <span id="lastActivity">Now</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.11/signalr.min.js"></script>
+  <script src="/member.js"></script>
+</body>
+</html>

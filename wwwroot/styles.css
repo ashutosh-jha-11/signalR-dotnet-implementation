@@ -1,0 +1,69 @@
+/* Responsive modern styles with simple system fonts.
+   Comments are present so developers can tweak easily. */
+
+:root{
+  --bg:#f6f8fb;
+  --card:#ffffff;
+  --accent:#4f46e5;
+  --muted:#6b7280;
+  --glass: rgba(255,255,255,0.7);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  background:linear-gradient(180deg,#f8fafc,var(--bg));
+  color:#0f172a;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* Topbar */
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px 20px;
+  background:linear-gradient(90deg,#eef2ff,#ffffff);
+  box-shadow:0 2px 8px rgba(15,23,42,0.06);
+}
+.topbar h1{margin:0;font-size:18px;color:var(--accent)}
+.login input{padding:8px 10px;border-radius:10px;border:1px solid #e6e9ef;margin-right:8px;min-width:180px}
+.login button{padding:8px 12px;border-radius:10px;border:0;background:var(--accent);color:#fff;cursor:pointer}
+.login button:hover{opacity:0.95}
+
+/* Layout */
+.app main{display:grid;grid-template-columns:1fr 340px;gap:18px;padding:22px;max-width:1100px;margin:20px auto}
+.card{background:var(--card);padding:18px;border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,0.04)}
+
+/* feed */
+.feed-head{display:flex;flex-direction:column;gap:6px}
+.feed-head h2{margin:0}
+.muted{color:var(--muted);font-size:13px}
+
+/* history list */
+.history{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+.history .item{padding:12px;border-radius:10px;border:1px solid #eef2ff;background:linear-gradient(180deg,#ffffff,#fbfdff);display:flex;justify-content:space-between;align-items:flex-start}
+.history .title{font-weight:600;margin-bottom:6px}
+.history .msg{color:var(--muted);font-size:14px}
+
+/* toast container */
+#toast-container{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:12px;width:320px;z-index:9999}
+.toast{background:linear-gradient(180deg,#fff,#fbfdff);padding:14px;border-radius:12px;box-shadow:0 12px 40px rgba(2,6,23,0.12);display:flex;gap:12px;align-items:flex-start}
+.toast .title{font-weight:700}
+.toast .meta{color:var(--muted);font-size:13px}
+.toast button{border:0;background:transparent;color:var(--muted);cursor:pointer}
+
+/* admin panel */
+.card.admin input, .card.admin textarea{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #e6e9ef}
+.card.admin button{width:100%;padding:10px;border-radius:8px;border:0;background:var(--accent);color:#fff;cursor:pointer}
+.admin-section{margin-bottom:20px;padding:16px;border-radius:10px;background:linear-gradient(180deg,#fafafa,#ffffff);border:1px solid #eef2ff}
+.admin-section h4{margin:0 0 12px 0;color:var(--accent);font-size:14px;font-weight:600}
+
+/* small screens */
+@media (max-width: 880px){
+  .app main{grid-template-columns:1fr; padding:14px}
+  #toast-container{right:12px;left:12px;width:auto}
+  .login input{min-width:120px}
+}

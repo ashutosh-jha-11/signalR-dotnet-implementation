@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test SignalR Targeting</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .client { border: 1px solid #ccc; margin: 10px; padding: 15px; border-radius: 8px; }
+        .client h3 { margin-top: 0; }
+        .notifications { background: #f5f5f5; padding: 10px; margin: 10px 0; min-height: 100px; }
+        .notification { background: #e3f2fd; padding: 8px; margin: 5px 0; border-radius: 4px; }
+        button { padding: 8px 16px; margin: 5px; }
+        .status { font-weight: bold; }
+        .connected { color: green; }
+        .disconnected { color: red; }
+    </style>
+</head>
+<body>
+    <h1>SignalR Targeting Test</h1>
+    
+    <div class="client">
+        <h3>Client 1 (player123)</h3>
+        <button onclick="connectClient('player123', 1)">Connect</button>
+        <button onclick="disconnectClient(1)">Disconnect</button>
+        <div class="status" id="status1">Disconnected</div>
+        <div class="notifications" id="notifications1">
+            <div>Notifications will appear here...</div>
+        </div>
+    </div>
+    
+    <div class="client">
+        <h3>Client 2 (player456)</h3>
+        <button onclick="connectClient('player456', 2)">Connect</button>
+        <button onclick="disconnectClient(2)">Disconnect</button>
+        <div class="status" id="status2">Disconnected</div>
+        <div class="notifications" id="notifications2">
+            <div>Notifications will appear here...</div>
+        </div>
+    </div>
+    
+    <div class="client">
+        <h3>Client 3 (player789)</h3>
+        <button onclick="connectClient('player789', 3)">Connect</button>
+        <button onclick="disconnectClient(3)">Disconnect</button>
+        <div class="status" id="status3">Disconnected</div>
+        <div class="notifications" id="notifications3">
+            <div>Notifications will appear here...</div>
+        </div>
+    </div>
+    
+    <div class="client">
+        <h3>Test Notifications</h3>
+        <button onclick="sendToPlayer123()">Send to player123 only</button>
+        <button onclick="sendToPlayer456()">Send to player456 only</button>
+        <button onclick="sendToMultiple()">Send to player123 & player456</button>
+        <button onclick="sendBroadcast()">Send to ALL</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.11/signalr.min.js"></script>
+    <script>
+        const connections = {};
+        
+        async function connectClient(playerId, clientNum) {
+            if (connections[clientNum]) {
+                await connections[clientNum].stop();
+            }
+            
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl(`/hubs/notifications?user=${encodeURIComponent(playerId)}`)
+                .withAutomaticReconnect()
+                .build();
+            
+            connection.on('ReceiveNotification', (notification) => {
+                console.log(`Client ${clientNum} (${playerId}) received:`, notification);
+                addNotification(clientNum, notification);
+            });
+            
+            connection.onclose(() => {
+                updateStatus(clientNum, 'Disconnected');
+            });
+            
+            try {
+                await connection.start();
+                connections[clientNum] = connection;
+                updateStatus(clientNum, 'Connected');
+                console.log(`Client ${clientNum} (${playerId}) connected`);
+            } catch (error) {
+                console.error(`Client ${clientNum} connection failed:`, error);
+                updateStatus(clientNum, 'Connection Failed');
+            }
+        }
+        
+        async function disconnectClient(clientNum) {
+            if (connections[clientNum]) {
+                await connections[clientNum].stop();
+                delete connections[clientNum];
+                updateStatus(clientNum, 'Disconnected');
+            }
+        }
+        
+        function updateStatus(clientNum, status) {
+            const statusEl = document.getElementById(`status${clientNum}`);
+            statusEl.textContent = status;
+            statusEl.className = status === 'Connected' ? 'status connected' : 'status disconnected';
+        }
+        
+        function addNotification(clientNum, notification) {
+            const container = document.getElementById(`notifications${clientNum}`);
+            const notifEl = document.createElement('div');
+            notifEl.className = 'notification';
+            notifEl.innerHTML = `
+                <strong>${notification.title}</strong><br>
+                ${notification.message}<br>
+                <small>${new Date().toLocaleTimeString()}</small>
+            `;
+            container.appendChild(notifEl);
+        }
+        
+        async function sendToPlayer123() {
+            try {
+                const response = await fetch('/api/admin/notifications/send-to-member', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-ADMIN-KEY': 'secret-admin-key'
+                    },
+                    body: JSON.stringify({
+                        playerId: 'player123',
+                        title: 'Targeted Test',
+                        message: 'This should only go to player123'
+                    })
+                });
+                const result = await response.json();
+                console.log('Send to player123 result:', result);
+            } catch (error) {
+                console.error('Failed to send to player123:', error);
+            }
+        }
+        
+        async function sendToPlayer456() {
+            try {
+                const response = await fetch('/api/admin/notifications/send-to-member', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-ADMIN-KEY': 'secret-admin-key'
+                    },
+                    body: JSON.stringify({
+                        playerId: 'player456',
+                        title: 'Targeted Test',
+                        message: 'This should only go to player456'
+                    })
+                });
+                const result = await response.json();
+                console.log('Send to player456 result:', result);
+            } catch (error) {
+                console.error('Failed to send to player456:', error);
+            }
+        }
+        
+        async function sendToMultiple() {
+            try {
+                const response = await fetch('/api/notifications/send-to-players', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-ADMIN-KEY': 'secret-admin-key'
+                    },
+                    body: JSON.stringify({
+                        playerIds: ['player123', 'player456'],
+                        title: 'Multi-Target Test',
+                        message: 'This should go to player123 AND player456 only'
+                    })
+                });
+                const result = await response.json();
+                console.log('Send to multiple result:', result);
+            } catch (error) {
+                console.error('Failed to send to multiple:', error);
+            }
+        }
+        
+        async function sendBroadcast() {
+            try {
+                const response = await fetch('/api/notifications/broadcast', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-ADMIN-KEY': 'secret-admin-key'
+                    },
+                    body: JSON.stringify({
+                        title: 'Broadcast Test',
+                        message: 'This should go to ALL connected clients'
+                    })
+                });
+                const result = await response.json();
+                console.log('Broadcast result:', result);
+            } catch (error) {
+                console.error('Failed to broadcast:', error);
+            }
+        }
+    </script>
+</body>
+</html>

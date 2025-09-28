@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI Demo - Improved Dropdown</title>
+    <link rel="stylesheet" href="/admin-styles.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            margin: 0;
+        }
+        .demo-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        .demo-title {
+            text-align: center;
+            color: #1f2937;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .demo-subtitle {
+            text-align: center;
+            color: #6b7280;
+            font-size: 16px;
+            margin-bottom: 40px;
+        }
+        .demo-section {
+            margin-bottom: 30px;
+        }
+        .demo-label {
+            font-size: 15px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 12px;
+            display: block;
+        }
+        .demo-description {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .feature-list {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .feature-list h4 {
+            color: #1f2937;
+            margin: 0 0 12px 0;
+            font-size: 16px;
+        }
+        .feature-list ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #4b5563;
+        }
+        .feature-list li {
+            margin-bottom: 6px;
+        }
+        .links {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .links a {
+            display: inline-block;
+            margin: 0 10px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .links a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1 class="demo-title">🎨 Improved Dropdown UI</h1>
+        <p class="demo-subtitle">Modern, user-friendly multi-select component</p>
+
+        <div class="demo-section">
+            <label class="demo-label">Select Recipients</label>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <span style="font-size: 14px; color: #6b7280;">Choose members to send notifications to</span>
+                <button type="button" onclick="simulateRefresh()" class="refresh-members-btn">
+                    <span class="refresh-icon">🔄</span>
+                    <span class="refresh-text">Refresh</span>
+                </button>
+            </div>
+            
+            <div class="multi-select-container">
+                <div class="multi-select-header" id="demoHeader" onclick="toggleDemo()">
+                    <span class="placeholder">Select from 3 members (3 online)</span>
+                    <span class="arrow">▼</span>
+                </div>
+                <div class="multi-select-dropdown hidden" id="demoDropdown">
+                    <div class="multi-select-search">
+                        <input type="text" placeholder="Search members..." onkeyup="filterDemo(this.value)">
+                    </div>
+                    <div class="multi-select-options" id="demoOptions">
+                        <div class="multi-select-option" onclick="selectDemo('player123', 'Alice Johnson')">
+                            <input type="checkbox">
+                            <div class="member-info">
+                                <div class="member-name">Alice Johnson</div>
+                                <div class="member-status">player123 • 🟢 Online • Last seen 2:45 PM</div>
+                            </div>
+                            <div class="online-indicator"></div>
+                        </div>
+                        <div class="multi-select-option" onclick="selectDemo('player456', 'Bob Smith')">
+                            <input type="checkbox">
+                            <div class="member-info">
+                                <div class="member-name">Bob Smith</div>
+                                <div class="member-status">player456 • 🟢 Online • Last seen 2:43 PM</div>
+                            </div>
+                            <div class="online-indicator"></div>
+                        </div>
+                        <div class="multi-select-option" onclick="selectDemo('player789', 'Carol Davis')">
+                            <input type="checkbox">
+                            <div class="member-info">
+                                <div class="member-name">Carol Davis</div>
+                                <div class="member-status">player789 • 🟢 Online • Last seen 2:41 PM</div>
+                            </div>
+                            <div class="online-indicator"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="selected-members" id="demoTags">
+                <!-- Selected member tags will appear here -->
+            </div>
+        </div>
+
+        <div class="feature-list">
+            <h4>✨ New Features & Improvements</h4>
+            <ul>
+                <li><strong>Modern Design:</strong> Gradient backgrounds, smooth animations, and professional styling</li>
+                <li><strong>Better Visual Feedback:</strong> Hover effects, selection states, and loading animations</li>
+                <li><strong>Smart Sorting:</strong> Online members first, then alphabetical by name</li>
+                <li><strong>Enhanced Information:</strong> Shows member count, online status, and last activity</li>
+                <li><strong>Improved Search:</strong> Real-time filtering with better UX</li>
+                <li><strong>Animated Tags:</strong> Beautiful selected member tags with smooth removal</li>
+                <li><strong>Loading States:</strong> Proper feedback during refresh operations</li>
+                <li><strong>Responsive Design:</strong> Works perfectly on all screen sizes</li>
+            </ul>
+        </div>
+
+        <div class="links">
+            <a href="/admin.html">🔧 Admin Portal</a>
+            <a href="/index.html">👤 Member Portal</a>
+            <a href="/quick-test.html">🧪 Quick Test</a>
+        </div>
+    </div>
+
+    <script>
+        let selectedMembers = [];
+        
+        function toggleDemo() {
+            const dropdown = document.getElementById('demoDropdown');
+            const header = document.getElementById('demoHeader');
+            
+            dropdown.classList.toggle('hidden');
+            header.classList.toggle('open');
+        }
+        
+        function selectDemo(playerId, displayName) {
+            const checkbox = event.target.closest('.multi-select-option').querySelector('input[type="checkbox"]');
+            const option = event.target.closest('.multi-select-option');
+            
+            if (selectedMembers.includes(playerId)) {
+                selectedMembers = selectedMembers.filter(id => id !== playerId);
+                checkbox.checked = false;
+                option.classList.remove('selected');
+            } else {
+                selectedMembers.push(playerId);
+                checkbox.checked = true;
+                option.classList.add('selected');
+            }
+            
+            updateDemoTags();
+            updateDemoHeader();
+        }
+        
+        function updateDemoTags() {
+            const container = document.getElementById('demoTags');
+            const members = {
+                'player123': 'Alice Johnson',
+                'player456': 'Bob Smith', 
+                'player789': 'Carol Davis'
+            };
+            
+            container.innerHTML = selectedMembers.map(id => `
+                <div class="selected-member-tag">
+                    ${members[id]}
+                    <span class="remove" onclick="removeDemo('${id}')">&times;</span>
+                </div>
+            `).join('');
+        }
+        
+        function removeDemo(playerId) {
+            selectedMembers = selectedMembers.filter(id => id !== playerId);
+            const option = document.querySelector(`[onclick*="${playerId}"]`);
+            const checkbox = option?.querySelector('input[type="checkbox"]');
+            
+            if (checkbox) checkbox.checked = false;
+            if (option) option.classList.remove('selected');
+            
+            updateDemoTags();
+            updateDemoHeader();
+        }
+        
+        function updateDemoHeader() {
+            const header = document.getElementById('demoHeader');
+            const placeholder = header.querySelector('.placeholder');
+            
+            if (selectedMembers.length === 0) {
+                placeholder.textContent = 'Select from 3 members (3 online)';
+                header.classList.remove('has-selection');
+            } else if (selectedMembers.length === 1) {
+                const members = {'player123': 'Alice Johnson', 'player456': 'Bob Smith', 'player789': 'Carol Davis'};
+                placeholder.textContent = `🟢 ${members[selectedMembers[0]]}`;
+                header.classList.add('has-selection');
+            } else {
+                placeholder.textContent = `${selectedMembers.length} members selected`;
+                header.classList.add('has-selection');
+            }
+        }
+        
+        function filterDemo(searchTerm) {
+            const options = document.querySelectorAll('#demoOptions .multi-select-option');
+            const term = searchTerm.toLowerCase();
+            
+            options.forEach(option => {
+                const name = option.querySelector('.member-name').textContent.toLowerCase();
+                const id = option.querySelector('.member-status').textContent.toLowerCase();
+                
+                if (name.includes(term) || id.includes(term)) {
+                    option.style.display = 'flex';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+        }
+        
+        async function simulateRefresh() {
+            const button = event.target.closest('.refresh-members-btn');
+            const icon = button.querySelector('.refresh-icon');
+            const text = button.querySelector('.refresh-text');
+            
+            button.classList.add('loading');
+            button.disabled = true;
+            text.textContent = 'Loading...';
+            
+            // Simulate loading
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            button.classList.remove('loading');
+            text.textContent = 'Refreshed!';
+            icon.textContent = '✅';
+            
+            setTimeout(() => {
+                text.textContent = 'Refresh';
+                icon.textContent = '🔄';
+                button.disabled = false;
+            }, 2000);
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const container = document.querySelector('.multi-select-container');
+            if (!container.contains(e.target)) {
+                document.getElementById('demoDropdown').classList.add('hidden');
+                document.getElementById('demoHeader').classList.remove('open');
+            }
+        });
+    </script>
+</body>
+</html>
